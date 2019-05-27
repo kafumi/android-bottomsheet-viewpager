@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# The names of `ViewPager$LayoutParams#position` and `BottomSheetBehavior#findScrollingChild()` are used by `BottomSheetViewPager`
+-keep class androidx.viewpager.widget.ViewPager$LayoutParams { int position; }
+-keep class com.google.android.material.bottomsheet.BottomSheetBehavior { *** findScrollingChild(...); }
