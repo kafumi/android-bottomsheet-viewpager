@@ -8,6 +8,9 @@ import java.lang.reflect.Field
 
 class BottomSheetViewPager(context: Context, attrs: AttributeSet?) : ViewPager(context, attrs) {
     constructor(context: Context) : this(context, null)
+
+    // Need to access package-private `position` field of `ViewPager.LayoutParams` to determine
+    // which child view is the view for currently selected item from `ViewPager.getCurrentItem()`.
     private val positionField: Field =
         ViewPager.LayoutParams::class.java.getDeclaredField("position").also {
             it.isAccessible = true
@@ -16,6 +19,9 @@ class BottomSheetViewPager(context: Context, attrs: AttributeSet?) : ViewPager(c
     init {
         addOnPageChangeListener(object : SimpleOnPageChangeListener() {
             override fun onPageSelected(position: Int) {
+                // Need to call requestLayout() when selected page is changed so that
+                // `BottomSheetBehavior` calls `findScrollingChild()` and recognizes the new page
+                // as the "scrollable child".
                 requestLayout()
             }
         })
@@ -23,11 +29,11 @@ class BottomSheetViewPager(context: Context, attrs: AttributeSet?) : ViewPager(c
 
     override fun getChildAt(index: Int): View {
         val stackTrace = Throwable().stackTrace
-        val findScrollingChild = stackTrace.getOrNull(1)?.let {
+        val calledFromFindScrollingChild = stackTrace.getOrNull(1)?.let {
             it.className == "com.google.android.material.bottomsheet.BottomSheetBehavior" &&
                     it.methodName == "findScrollingChild"
         }
-        if (findScrollingChild != true) {
+        if (calledFromFindScrollingChild != true) {
             return super.getChildAt(index)
         }
 
